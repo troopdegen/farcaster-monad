@@ -16,7 +16,7 @@ export function FarcasterActions() {
               className="bg-white text-black rounded-md p-2 text-sm"
               onClick={() => actions?.addMiniApp()}
             >
-              addFrame
+              Add this app to your home screen
             </button>
             <button
               type="button"
@@ -30,21 +30,21 @@ export function FarcasterActions() {
               className="bg-white text-black rounded-md p-2 text-sm"
               onClick={() =>
                 actions?.composeCast({
-                  text: 'Check out this Monad Farcaster MiniApp Template!',
-                  embeds: [`${APP_URL}`],
+                  text: 'Check out this Monad Farcaster MiniApp Template!',// todo: add joke here
+                  embeds: [`${APP_URL}/images/dad.jpg`],
                 })
               }
             >
-              composeCast
+              Share this Joke
             </button>
-            <button
+            {/* <button
               type="button"
               className="bg-white text-black rounded-md p-2 text-sm"
               onClick={() => actions?.openUrl('https://docs.monad.xyz')}
             >
               openUrl
-            </button>
-            <button
+            </button> */}
+            {/* <button
               type="button"
               className="bg-white text-black rounded-md p-2 text-sm"
               onClick={() =>
@@ -52,14 +52,14 @@ export function FarcasterActions() {
               }
             >
               signIn
-            </button>
-            <button
+            </button> */}
+            {/* <button
               type="button"
               className="bg-white text-black rounded-md p-2 text-sm"
               onClick={() => actions?.viewProfile({ fid: 17979 })}
             >
               viewProfile
-            </button>
+            </button> */}
           </div>
         ) : (
           <p className="text-sm text-left">Actions not available</p>
