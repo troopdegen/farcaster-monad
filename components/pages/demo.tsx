@@ -1,10 +1,10 @@
 'use client'
 
-import { Home } from '@/components/Home/Home'
+import { MonadDemo } from '@/components/Home/MonadDemo'
 import { useFrame } from '@/components/farcaster-provider'
 import { SafeAreaContainer } from '@/components/safe-area-container'
 
-export default function HomePage() {
+export default function DemoPage() {
   const { context, isLoading, isSDKLoaded } = useFrame()
 
   if (isLoading) {
@@ -31,7 +31,7 @@ export default function HomePage() {
 
   return (
     <SafeAreaContainer insets={context?.client.safeAreaInsets}>
-      <Home />
+      <MonadDemo />
     </SafeAreaContainer>
   )
 }
