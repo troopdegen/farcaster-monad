@@ -1,8 +1,8 @@
-# Get Price
+# Get Price for Monad Testnet Swaps
 
-Now for the fun part! Let's fetch a live price using the [0x Swap's `/swap/permit2/price` endpoint](https://0x.org/docs/api#tag/Swap/operation/swap::permit2::getPrice) 🙌
+Now for the exciting part! Let's implement real-time price fetching for our Monad testnet tokens using the [0x Swap API](https://0x.org/docs/api#tag/Swap/operation/swap::permit2::getPrice) pattern, adapted for new EVM chains 🚀
 
-In our app, we want to dynamically surface the amount of buy token a user can get whenever they input a sell token amount.
+Our goal is to dynamically display the buyToken amount when users input a sellToken amount, providing real-time pricing feedback in our Farcaster Mini App.
 
 ![Modal showing a swap from WMATIC to USDC](https://github.com/jlin27/token-swap-dapp-course/assets/8042156/5285ebcb-36c7-4a0b-ae20-7256d1c79a49)
 
@@ -23,49 +23,63 @@ Later, when the user is actually ready to make a swap, we will ping [`/swap/perm
 
 It is important to ping `/quote` only when the user is ready to submit the order because Market Makers must commit their assets to settle that swap when they provide the quote. So if we ping `/quote` too much when we really are just asking for a price and not ready to submit an order, then this can clog up the system!
 
-## Fetch price
+## Monad Testnet Price Strategy
 
-Fetching a price with the [`/swap/permit2/price`](https://0x.org/docs/api#tag/Swap/operation/swap::permit2::getPrice) endpoint is a straight-forward HTTP GET request. We then need to display the price data accordingly to our users.
+For new chains like Monad Testnet, we need a hybrid approach since direct 0x API support may be limited:
 
-### What do we need to do
+### Our Multi-Layer Price Strategy:
 
-Now we will surface the amount of buy token a user can swap when they input a sell amount.
+1. **Primary**: 0x API with Monad testnet parameters
+2. **Fallback**: Calculate price from available buyAmount/sellAmount data
+3. **Error Handling**: Graceful degradation with user feedback
 
-We will need to complete the following:
+### What we need to implement:
 
-- plug the `/swap/permit2/price` endpoint into our PriceView
-- automatically fetch a new price whenever the inputs change (e.g. new sell amount, new sell token selected)
-- format the user inputted amounts so the API can read it, and format response from the API so it is human-readable
+- Wrap the `/swap/permit2/price` endpoint behind our Next.js API route
+- Handle Monad testnet-specific parameters (Chain ID: 10143)
+- Implement fallback price calculation when API responses are incomplete
+- Format amounts for both API consumption and human-readable display
+- Auto-fetch prices when inputs change
 
-### Get a 0x API key
+### Get a 0x API Key
 
-Every call to a 0x API must include a 0x API secret key. [Create a 0x account](https://dashboard.0x.org/) and get a live API key. See the [guide here](https://0x.org/docs/introduction/getting-started) to get setup.
+Every call to the 0x API requires an API key. [Create a 0x account](https://dashboard.0x.org/) and get your API key from the [dashboard](https://dashboard.0x.org/).
 
-### Our new modal component: SwapErc20Modal
+Add your API key to `.env.local`:
+```bash
+NEXT_PUBLIC_ZEROEX_API_KEY=your_api_key_here
+```
 
-`SwapErc20Modal` is the component where users can browse for a price without committing to a swap, aka, get the indicative price. Recall that an indicative price is used when users just want to check the price they could receive on a swap, for this we will use the [`/swap/permit2/price`](https://0x.org/docs/api#tag/Swap/operation/swap::permit2::getPrice) endpoint.
+### Understanding Price Response Handling
 
-Currently, when a user inputs a `sellAmount`, the corresponding amount they can buy doesn't automatically appear in the UI. We want the `buyAmount` to populate with the price we get from `/swap/permit2/price`.
+Our `SwapErc20Modal` displays indicative prices to users browsing swap options. Since Monad testnet has limited 0x support, we've implemented robust fallback logic:
+
+**When 0x API returns complete data:**
+- Use the `price` field directly
+
+**When 0x API returns partial data:**
+- Calculate unit price from `buyAmount` and `sellAmount`
+- Display calculated exchange rate to users
+
+This ensures consistent pricing display regardless of API response completeness.
 
 ## Fetch price from PriceView
 
 In the previous lesson, we saw how to fetch a price using `/swap/permit2/price`. Now we need to plug it into the UI.
 
-### Step 1. Wrap price API request
+### Step 1. Create Protected API Route
 
-To do this in Next, we will need to wrap our API request is wrapped behind `/app/api/price/route.ts` using [Next.js Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers).
+We wrap our 0x API calls behind a Next.js API route to protect our API keys and handle Monad-specific parameters.
 
-Why wrap? To protect our API keys.
-
-Wrapping our API key protects it because all API requests are viewable by if someone inspects the browser, but we don’t want them inspecting an finding our keys. Instead, when the user queries for an indicative price, it pings our API setup in `/app/api/price/route.ts` and that pings the 0x Swap API using the API key in the header.
+**Why wrap?** Browser requests expose API keys, but server-side routes keep them secure. Our frontend calls `/api/price`, which then calls the 0x API with protected credentials.
 
 `/app/api/price/route.ts`
 
-```
-import { type NextRequest } from 'next/server';
+```typescript
+import { type NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
+  const searchParams = request.nextUrl.searchParams
   try {
     const res = await fetch(
       `https://api.0x.org/swap/permit2/price?${searchParams}`,
@@ -75,22 +89,25 @@ export async function GET(request: NextRequest) {
           '0x-version': 'v2',
         },
       }
-    );
-    const data = await res.json();
+    )
+    const data = await res.json()
 
-    console.log(
-      'price api',
-      `https://api.0x.org/swap/permit2/price?${searchParams}`
-    );
+    console.log('0x API URL:', `https://api.0x.org/swap/permit2/price?${searchParams}`)
+    console.log('0x API Response:', data)
 
-    console.log('price data', data);
-
-    return Response.json(data);
+    return Response.json(data)
   } catch (error) {
-    console.log(error);
+    console.error('Price API Error:', error)
+    return Response.json({ error: 'Failed to fetch price' }, { status: 500 })
   }
 }
 ```
+
+**Key Features:**
+- Secure API key handling via environment variables
+- Error handling with proper HTTP status codes
+- Logging for debugging Monad testnet integration
+- Direct passthrough of search parameters to 0x API
 
 ### Step 2. Automatically fetch price with useEffect hook
 

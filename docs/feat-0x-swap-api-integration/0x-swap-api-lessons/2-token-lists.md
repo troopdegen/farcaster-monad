@@ -1,54 +1,64 @@
-# Fetch and Display Token List
+# Create and Manage Monad Testnet Token Lists
 
-Currently our app has two dropdowns, one to select a _sellToken_ and one to select a _buyToken_.
+Our Farcaster Mini App features token selection dropdowns for both _sellToken_ and _buyToken_ in the swap interface.
 
 ![Select field showing available tokens to swap](https://github.com/jlin27/token-swap-dapp-course/assets/8042156/1b3f00c2-ba1c-474c-b437-e0e8e2818718)
 
-Where do these lists of tokens come from?
+For established chains, we can leverage curated [Token Lists](https://tokenlists.org/) that standardize ERC20 token metadata to filter out legitimate tokens from scams and duplicates. However, for new chains like Monad Testnet, we need to create our own curated token lists.
 
-Thankfully there are several established sources of curated and open-sourced [Token Lists](https://tokenlists.org/) which standardize lists of ERC20 tokens to filter out high quality, legitimate tokens from scams, fakes, and duplicates. Read more about the importance of token lists [here](https://uniswap.org/blog/token-lists).
+Since Monad Testnet is a newer chain, we'll create a custom token list with carefully selected tokens for our swap functionality. This approach gives us full control over supported tokens and ensures a high-quality user experience.
 
-As developers, we can choose to ingest the entire list or customize our own token lists based off of these sources.
-
-For ERC20 tokens, these lists typically include crucial metadata - such as the token names (Wrapped Polygon Ecosystem Token), symbol (WPOL), address, and logoURI - which can be leveraged by apps such as ours.
-
-Let's learn how to retrieve a list of ERC20 tokens to populate the modal, so that a user can select a token to swap.
+Let's learn how to create and manage a token list for Monad Testnet tokens in our Farcaster Mini App.
 
 ## Code
 
-In our demo, we've pre-populated a curated a small token list for you in [`/src/lib/constants.ts`](https://github.com/dablclub/etherstart/blob/main/next-app/src/lib/constants.ts).
+In our implementation, we've created a curated token list specifically for Monad Testnet in [`/lib/tokens.ts`](../../lib/tokens.ts).
 
-> In production level apps, it's common practice to maintain a token list since some apps don't support _all_ available tokens.
+> **Production Best Practice:** Maintaining a curated token list is standard for production apps since not all applications support every available token.
 
-> For now, we just have tokens from the Polygon chain, but you could easily add more to enable multi-chain support.
+> **Multi-chain Support:** While we focus on Monad Testnet, this pattern can easily be extended for multi-chain support.
 
-All tokens contain the following metadata:
+Our token interface includes essential metadata:
 
-```
-// See /src/constants.ts
-
-name:  string;
-address:  Address;
-symbol:  string;
-decimals:  number;
-chainId:  number;
-logoURI:  string;
-```
-
-The tokens are setup in the array `POLYGON_TOKENS` which are accessible via 2 objects, `POLYGON_TOKENS_BY_SYMBOL` and `POLYGON_TOKENS_BY_ADDRESS`. At different points in the dApp, we may need to access the metadata from different keys.
-
-We will create a new component called `swapErc20Modal` where we will handle the swaps. As we will be handling multiple tokens, we need to install shadcn/ui's Select component.
-
-These token lists are called from the dropdown lists (Select elements) in `/app/components/web3/swapErc20Modal.tsx`.
-
-```
-npx shadcn@latest add select
+```typescript
+// lib/tokens.ts - Token Interface
+export interface Token {
+  name: string;
+  address: Address;
+  symbol: string;
+  decimals: number;
+  chainId: number;
+  logoURI: string;
+}
 ```
 
-```
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
+## Monad Testnet Token Configuration
 
+Our tokens are organized in the `MONAD_TESTNET_TOKENS` array and made accessible via optimized lookup objects:
+
+```typescript
+// Efficient access patterns
+export const MONAD_TESTNET_TOKENS_BY_SYMBOL: Record<string, Token>
+export const MONAD_TESTNET_TOKENS_BY_ADDRESS: Record<string, Token>
+
+// Helper functions
+export function getTokenBySymbol(symbol: string): Token | undefined
+export function getTokenByAddress(address: string): Token | undefined
+```
+
+**Current Monad Testnet Token List:**
+- **WMON** (Wrapped Monad) - `0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701`
+- **WETH** (Wrapped Ether) - `0xB5a30b0FDc42e3E9760Cb8449Fb37`
+- **WBTC** (Wrapped Bitcoin) - `0xcf5a6076cfa32686c0Df13aBaDa2b40dec133F1d`
+- **USDC** (USD Coin) - `0xf817257fed379853cDe0fa4F97AB987181B1E5Ea`
+- **LINK** (ChainLink) - `0x6C6A73cb3549c8480F08420EE2e5DFaf9d2D4CDb`
+
+The token lists are integrated into our swap component via shadcn/ui's Select component:
+
+```typescript
+// components/swap/swap-erc20-modal.tsx - Simplified view
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import {
   Dialog,
   DialogContent,
@@ -56,203 +66,208 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
+} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
-  POLYGON_TOKENS,
-  POLYGON_TOKENS_BY_SYMBOL,
+  MONAD_TESTNET_TOKENS,
+  MONAD_TESTNET_TOKENS_BY_SYMBOL,
   Token,
-} from '@/lib/constants';
+  DEFAULT_SELL_TOKEN,
+  DEFAULT_BUY_TOKEN,
+} from '@/lib/tokens'
 
-type SendErc20ModalProps = {
-  userAddress: `0x${string}` | undefined;
-};
+type SwapErc20ModalProps = {
+  userAddress: `0x${string}` | undefined
+}
 
-export default function SwapErc20Modal({ userAddress }: SendErc20ModalProps) {
-  const [isMounted, setIsMounted] = useState(false);
-  const [sellToken, setSellToken] = useState('wmatic');
-  const [sellAmount, setSellAmount] = useState('');
-  const [buyToken, setBuyToken] = useState('usdc');
-  const [buyAmount, setBuyAmount] = useState('');
+export default function SwapErc20Modal({ userAddress }: SwapErc20ModalProps) {
+  const [isMounted, setIsMounted] = useState(false)
+  const [sellToken, setSellToken] = useState(DEFAULT_SELL_TOKEN.toLowerCase())
+  const [sellAmount, setSellAmount] = useState('')
+  const [buyToken, setBuyToken] = useState(DEFAULT_BUY_TOKEN.toLowerCase())
+  const [buyAmount, setBuyAmount] = useState('')
+
+  // Get token objects from our Monad token list
+  const sellTokenObject = MONAD_TESTNET_TOKENS_BY_SYMBOL[sellToken]
+  const buyTokenObject = MONAD_TESTNET_TOKENS_BY_SYMBOL[buyToken]
 
   const handleSellTokenChange = (value: string) => {
-    setSellToken(value);
-  };
-
-  function handleBuyTokenChange(value: string) {
-    setBuyToken(value);
+    setSellToken(value)
   }
 
-  function handleSwap() {
-    event?.preventDefault();
-    toast.warning('connect swap functionality');
+  const handleBuyTokenChange = (value: string) => {
+    setBuyToken(value)
+  }
+
+  const handleSwap = (event: React.FormEvent) => {
+    event?.preventDefault()
+    console.log('Swap functionality will be implemented next')
   }
 
   useEffect(() => {
     if (!isMounted) {
-      setIsMounted(true);
+      setIsMounted(true)
     }
-  }, [isMounted]);
+  }, [isMounted])
 
   return (
     <Dialog>
-      <DialogTrigger asChild className="w-full">
-        <Button>Swap ERC20</Button>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="w-full">
+          Swap Tokens
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-center">Swap ERC20</DialogTitle>
+          <DialogTitle>Token Swap on Monad</DialogTitle>
           <DialogDescription>
-            The amount entered will be swapped for the amount of tokens
-            displayed in the second row
+            Swap tokens on Monad Testnet with real-time pricing
           </DialogDescription>
         </DialogHeader>
         {isMounted ? (
-          <div className="w-full">
-            <form
-              className="flex flex-col w-full gap-y-8"
-              onSubmit={handleSwap}
-            >
-              <div className="w-full flex flex-col gap-y-4">
-                <div className="w-full flex items-center gap-1.5">
-                  <Image
-                    alt={buyToken}
-                    className="h-9 w-9 mr-2 rounded-md"
-                    src={POLYGON_TOKENS_BY_SYMBOL[sellToken].logoURI}
-                    width={6}
-                    height={6}
-                  />
-                  <Select
-                    onValueChange={handleSellTokenChange}
-                    defaultValue="wmatic"
-                  >
-                    <SelectTrigger className="w-1/4">
-                      <SelectValue placeholder="Theme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {POLYGON_TOKENS.map((token: Token) => {
-                        return (
-                          <SelectItem
-                            key={token.address}
-                            value={token.symbol.toLowerCase()}
-                          >
-                            {token.symbol}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    className="w-3/4"
-                    type="number"
-                    name="sell-amount"
-                    id="sell-amount"
-                    placeholder="Enter amount..."
-                    required
-                  />
-                </div>
-                <div className="w-full flex items-center gap-1.5">
-                  <Image
-                    alt={buyToken}
-                    className="h-9 w-9 mr-2 rounded-md"
-                    src={POLYGON_TOKENS_BY_SYMBOL[buyToken].logoURI}
-                    width={6}
-                    height={6}
-                  />
-                  <Select
-                    onValueChange={handleBuyTokenChange}
-                    defaultValue="usdc"
-                  >
-                    <SelectTrigger className="w-1/4">
-                      <SelectValue placeholder="Buy..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {POLYGON_TOKENS.map((token: Token) => {
-                        return (
-                          <SelectItem
-                            key={token.address}
-                            value={token.symbol.toLowerCase()}
-                          >
-                            {token.symbol}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    className="w-3/4"
-                    type="number"
-                    id="buy-amount"
-                    name="buy-amount"
-                    placeholder="Enter amount..."
-                    disabled
-                  />
-                </div>
-              </div>
-              <Button>Swap</Button>
-            </form>
+          <div className="space-y-4">
+            {/* Sell Token Selection */}
+            <div className="flex items-center space-x-2">
+              <Image
+                alt={sellTokenObject.symbol}
+                className="h-8 w-8 rounded-md"
+                src={sellTokenObject.logoURI}
+                width={32}
+                height={32}
+              />
+              <Select onValueChange={handleSellTokenChange} defaultValue={DEFAULT_SELL_TOKEN.toLowerCase()}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONAD_TESTNET_TOKENS.map((token: Token) => (
+                    <SelectItem key={token.address} value={token.symbol.toLowerCase()}>
+                      {token.symbol}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                placeholder="0.0"
+                value={sellAmount}
+                onChange={(e) => setSellAmount(e.target.value)}
+                className="flex-1"
+              />
+            </div>
+
+            {/* Buy Token Selection */}
+            <div className="flex items-center space-x-2">
+              <Image
+                alt={buyTokenObject.symbol}
+                className="h-8 w-8 rounded-md"
+                src={buyTokenObject.logoURI}
+                width={32}
+                height={32}
+              />
+              <Select onValueChange={handleBuyTokenChange} defaultValue={DEFAULT_BUY_TOKEN.toLowerCase()}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONAD_TESTNET_TOKENS.map((token: Token) => (
+                    <SelectItem key={token.address} value={token.symbol.toLowerCase()}>
+                      {token.symbol}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                placeholder="0.0"
+                value={buyAmount}
+                disabled
+                className="flex-1"
+              />
+            </div>
+
+            <Button onClick={handleSwap} className="w-full">
+              Swap Tokens
+            </Button>
           </div>
         ) : (
           <p>Loading...</p>
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 ```
 
-A quick review of the code:
+**Code Review:**
+- Import Monad-specific token constants from our `lib/tokens.ts`
+- Use `DEFAULT_SELL_TOKEN` and `DEFAULT_BUY_TOKEN` for initial state
+- Map through `MONAD_TESTNET_TOKENS` for dropdown options
+- Display token logos using the `logoURI` from our token metadata
+- Set up state management for swap amounts and selected tokens
 
-- We are importing the shadcn/ui components and our constants
-- We declare the state variables that we will use to handle the tokens identifiers and amounts
-- We repeat the hydration pattern with `isMounted` + `useEffect`
-- Inside our modal, we place a form with the select elements to display the tokens from the dropdown, alongside an input field to enter the amounts
+## Token List Best Practices for New Chains
 
-Note that this is just one way to curate and surface token lists. Other teams may choose to ping an API and dynamically filter the list. The best option is whatever best fits the needs of your project.
+When building for newer chains like Monad, consider these approaches:
 
-## Add a New Token
+**1. Curated Lists (Our Approach):**
+- Full control over supported tokens
+- Ensures high-quality user experience
+- Easier to maintain for smaller token sets
 
-Let's add DAI to our token list!
+**2. API-Driven Lists:**
+- Dynamic token discovery
+- Automatic updates for new tokens
+- Requires reliable token data providers
 
-Here is the metadata for DAI on Polygon (see details on [PolygonScan](https://polygonscan.com/address/0x8f3cf7ad23cd3cadbd9735aff958023239c6a063)):
+**3. Hybrid Approach:**
+- Start with curated list
+- Gradually add API integration
+- Fallback to curated tokens if API fails
 
+## Adding New Tokens to Monad List
+
+To add a new token to our Monad testnet list, you'll need:
+
+```typescript
+// Example: Adding a new DEX token
+{
+  chainId: 10143,
+  name: "MonadSwap Token",
+  symbol: "MSWAP",
+  decimals: 18,
+  address: "0x..." // Contract address on Monad testnet
+  logoURI: "https://..." // Token logo URL
+}
 ```
-  {
-    chainId: 137,
-    name: "Dai - PoS",
-    symbol: "DAI",
-    decimals: 18,
-    address: "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
-    logoURI:
-      "https://raw.githubusercontent.com/maticnetwork/polygon-token-assets/main/assets/tokenAssets/dai.svg",
-  },
-```
 
-Format it correctly inside `/src/lib/constants.ts` so it is accessible by all our objects.
+Add it to the `MONAD_TESTNET_TOKENS` array in `/lib/tokens.ts`, and it will automatically be available in all lookup objects and UI components.
 
-Once you've added DAI to all the objects, you will be able to select it from the dropdown!
+## Future Token Sources for Monad
 
-![DAI is now available as an option in the select field](https://github.com/jlin27/token-swap-dapp-course/assets/8042156/2f995da3-9e9b-4c12-ba6f-3db86e1243c0)
+As Monad ecosystem grows, potential token list sources:
 
-## Other Notable Token Lists
-
-Want to add more token? Check out these open-sourced Token Lists:
-
-- Tokenlists: [https://tokenlists.org/](https://tokenlists.org/)
-- Trust Wallet: [https://github.com/trustwallet/assets/tree/master/blockchains](https://github.com/trustwallet/assets/tree/master/blockchains)
-- Polygon Assets github: [https://github.com/maticnetwork/polygon-token-assets/tree/main/assets/tokenAssets](https://github.com/maticnetwork/polygon-token-assets/tree/main/assets/tokenAssets)
-- Coin Gecko: [https://tokenlists.org/token-list?url=https://tokens.coingecko.com/uniswap/all.json](https://tokenlists.org/token-list?url=https://tokens.coingecko.com/uniswap/all.json)
+- **Monad Foundation** - Official token registries
+- **DeFi Protocols** - DEX-specific token lists  
+- **Community Lists** - Community-maintained registries
+- **Bridge Protocols** - Cross-chain token mappings
 
 ## Recap
 
-In this lesson, we learned about how to source token metadata, curate a token list, and surface this information to users through our UI.
+In this lesson, we created a comprehensive token management system for Monad Testnet:
+
+- ✅ Defined standardized token interface
+- ✅ Created curated Monad testnet token list  
+- ✅ Built efficient lookup systems
+- ✅ Integrated tokens into swap UI components
+- ✅ Established patterns for adding new tokens
 
 ![Final modal showing the available tokens to be swapped](https://github.com/jlin27/token-swap-dapp-course/assets/8042156/a5992263-0839-4ed0-9132-75d7b741aac8)
