@@ -10,6 +10,7 @@ import {
   useSendTransaction,
   useSwitchChain,
 } from 'wagmi'
+import { Button } from '../ui/button'
 
 export function WalletActions() {
   const { isEthProviderAvailable } = useFrame()
@@ -49,17 +50,17 @@ export function WalletActions() {
                 <h2 className="text-lg font-semibold text-left">
                   Send Transaction Example
                 </h2>
-                <button
+                <Button
                   type="button"
-                  className="bg-white text-black rounded-md p-2 text-sm"
+
                   onClick={sendTransactionHandler}
                 >
                   Send Transaction
-                </button>
+                </Button>
                 {hash && (
-                  <button
+                  <Button
                     type="button"
-                    className="bg-white text-black rounded-md p-2 text-sm"
+
                     onClick={() =>
                       window.open(
                         `https://testnet.monadexplorer.com/tx/${hash}`,
@@ -68,26 +69,26 @@ export function WalletActions() {
                     }
                   >
                     View Transaction
-                  </button>
+                  </Button>
                 )}
               </div>
             ) : (
-              <button
+              <Button
                 type="button"
-                className="bg-white text-black rounded-md p-2 text-sm"
+
                 onClick={() => switchChain({ chainId: monadTestnet.id })}
               >
                 Switch to Monad Testnet
-              </button>
+              </Button>
             )}
 
-            <button
+            <Button
               type="button"
-              className="bg-white text-black rounded-md p-2 text-sm"
+
               onClick={() => disconnect()}
             >
               Disconnect Wallet
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -99,13 +100,13 @@ export function WalletActions() {
       <div className="space-y-4 border border-[#333] rounded-md p-4">
         <h2 className="text-xl font-bold text-left">sdk.wallet.ethProvider</h2>
         <div className="flex flex-row space-x-4 justify-start items-start">
-          <button
+          <Button
             type="button"
             className="bg-white text-black w-full rounded-md p-2 text-sm"
             onClick={() => connect({ connector: miniAppConnector() })}
           >
             Connect Wallet
-          </button>
+          </Button>
         </div>
       </div>
     )

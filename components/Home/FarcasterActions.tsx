@@ -1,6 +1,7 @@
 import { useFrame } from '@/components/farcaster-provider'
 import { APP_URL } from '@/lib/constants'
 import { useMutation } from '@tanstack/react-query'
+import { Button } from '../ui/button'
 
 export function FarcasterActions() {
   const { actions } = useFrame()
@@ -11,23 +12,23 @@ export function FarcasterActions() {
       <div className="flex flex-row space-x-4 justify-start items-start">
         {actions ? (
           <div className="flex flex-col space-y-4 justify-start">
-            <button
+            <Button
               type="button"
-              className="bg-white text-black rounded-md p-2 text-sm"
+
               onClick={() => actions?.addMiniApp()}
             >
               Add this app to your home screen
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="bg-white text-black rounded-md p-2 text-sm"
+
               onClick={() => actions?.close()}
             >
               close
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="bg-white text-black rounded-md p-2 text-sm"
+
               onClick={() =>
                 actions?.composeCast({
                   text: 'Check out this Monad Farcaster MiniApp Template!',// todo: add joke here
@@ -36,30 +37,30 @@ export function FarcasterActions() {
               }
             >
               Share this Joke
-            </button>
-            {/* <button
+            </Button>
+            {/* <Button
               type="button"
-              className="bg-white text-black rounded-md p-2 text-sm"
+               
               onClick={() => actions?.openUrl('https://docs.monad.xyz')}
             >
               openUrl
-            </button> */}
-            {/* <button
+            </Button> */}
+            {/* <Button
               type="button"
-              className="bg-white text-black rounded-md p-2 text-sm"
+               
               onClick={() =>
                 actions?.signIn({ nonce: '1201', acceptAuthAddress: true })
               }
             >
               signIn
-            </button> */}
-            {/* <button
+            </Button> */}
+            {/* <Button
               type="button"
-              className="bg-white text-black rounded-md p-2 text-sm"
+               
               onClick={() => actions?.viewProfile({ fid: 17979 })}
             >
               viewProfile
-            </button> */}
+            </Button> */}
           </div>
         ) : (
           <p className="text-sm text-left">Actions not available</p>

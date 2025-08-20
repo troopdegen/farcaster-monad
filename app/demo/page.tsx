@@ -1,5 +1,5 @@
-import App from '@/components/pages/app'
+import Demo from '@/components/pages/demo'
 
 export default function Home() {
-  return <App />
+  return <Demo />
 }

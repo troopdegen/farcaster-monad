@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useFrame } from "@/components/farcaster-provider";
 import { MiniAppNotificationDetails } from "@farcaster/miniapp-core";
+import { Button } from "../ui/button";
 
 export function NotificationActions() {
   const { context, actions } = useFrame();
@@ -47,23 +48,23 @@ export function NotificationActions() {
       <h2 className="text-xl font-bold text-left mb-2">Notifications</h2>
       <div className="flex flex-col space-y-2">
         {notificationDetails ? (
-          <button
+          <Button
             type="button"
-            className="bg-white text-black rounded-md p-2 text-sm"
+
             onClick={() => sendNotification()}
             disabled={isSendingNotification || !notificationDetails}
           >
             {isSendingNotification ? "Sending..." : "Send Test Notification"}
-          </button>
+          </Button>
         ) : (
           <>
-            <button
+            <Button
               type="button"
-              className="bg-white text-black rounded-md p-2 text-sm"
+
               onClick={() => actions?.addMiniApp()}
             >
               Add this Mini App to receive notifications
-            </button>
+            </Button>
             <p className="text-xs text-red-600">
               You must add this Mini App and enable notifications to send a test
               notification.

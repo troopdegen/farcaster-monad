@@ -1,6 +1,7 @@
 import { useFrame } from '@/components/farcaster-provider'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Button } from '../ui/button'
 
 export function Haptics() {
   const { haptics } = useFrame()
@@ -77,15 +78,15 @@ export function Haptics() {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {buttons.map((button) => (
-                  <button
+                  <Button
                     key={button.type}
                     type="button"
-                    className="bg-white text-black rounded-md p-2 text-sm hover:bg-gray-100 transition-colors"
+                    className="rounded-md hover:bg-muted transition-colors"
                     onClick={() => triggerHaptic(button.type)}
                     disabled={isPending}
                   >
                     {isPending ? 'Triggering...' : button.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>

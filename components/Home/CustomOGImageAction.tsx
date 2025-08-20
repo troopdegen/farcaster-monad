@@ -1,5 +1,6 @@
 import { useFrame } from "@/components/farcaster-provider";
 import { APP_URL } from "@/lib/constants";
+import { Button } from "../ui/button";
 
 export default function CustomOGImageAction() {
   const { context, actions } = useFrame();
@@ -23,14 +24,14 @@ export default function CustomOGImageAction() {
       </h2>
       <div className="flex flex-col space-y-2">
         {fid ? (
-          <button
+          <Button
             type="button"
-            className="bg-white text-black rounded-md p-2 text-sm"
+
             onClick={() => handleGenerateCustomOGImage()}
             disabled={!fid}
           >
             Generate Custom Image
-          </button>
+          </Button>
         ) : (
           <p className="text-xs text-red-600">
             Please login to generate a custom image
