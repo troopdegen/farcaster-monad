@@ -7,6 +7,7 @@ import { NotificationActions } from './NotificationActions'
 import CustomOGImageAction from './CustomOGImageAction'
 import { Haptics } from './Haptics'
 import SwapErc20Modal from '@/components/swap/swap-erc20-modal'
+import WrapMonModal from '@/components/wrap/wrap-mon-modal'
 import { useAccount } from 'wagmi'
 
 export function MonadDemo() {
@@ -23,9 +24,10 @@ export function MonadDemo() {
         <NotificationActions />
         <WalletActions />
         <div className="space-y-4 border border-[#333] rounded-md p-4">
-          <h2 className="text-xl font-bold text-left">Token Swap</h2>
+          <h2 className="text-xl font-bold text-left">Token Operations</h2>
           <div className="flex flex-row space-x-4 justify-start items-start">
             <SwapErc20Modal userAddress={address} />
+            <WrapMonModal userAddress={address} />
           </div>
         </div>
         <CustomOGImageAction />
