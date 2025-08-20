@@ -96,7 +96,7 @@ export default function WrapMonModal({ userAddress }: WrapMonModalProps) {
     if (monBalance) {
       // Leave a small amount for gas fees (0.01 MON)
       const maxAmount = monBalance.value - parseEther('0.01')
-      if (maxAmount > 0n) {
+      if (maxAmount > BigInt(0)) {
         setWrapAmount(formatEther(maxAmount))
       }
     }
@@ -130,7 +130,7 @@ export default function WrapMonModal({ userAddress }: WrapMonModalProps) {
     if (!wrapAmount || !monBalance) return false
     try {
       const amount = parseEther(wrapAmount)
-      return amount > 0n && amount <= monBalance.value
+      return amount > BigInt(0) && amount <= monBalance.value
     } catch {
       return false
     }

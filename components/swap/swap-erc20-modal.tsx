@@ -467,7 +467,7 @@ function ApproveOrReviewButton({
     return <div className="text-red-500 text-sm">Approval error: {error.message}</div>
   }
 
-  if (allowance === 0n && !disabled) {
+  if (allowance === BigInt(0) && !disabled) {
     return (
       <Button onClick={onClickHandler} disabled={isApproving}>
         {isApproving ? 'Approving…' : 'Approve'}

@@ -4,6 +4,7 @@ import { TrophyIcon, UserIcon, VoteIcon } from "lucide-react"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 export default function AppBar() {
   const router = useRouter()
